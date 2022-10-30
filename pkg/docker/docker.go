@@ -5,8 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -25,6 +23,7 @@ type ExecutionService struct {
 }
 
 func (j ExecutionService) CreateSubmission(input stella.SubmissionInput) (*stella.SubmissionOutput, error) {
+	j.DockerClient = &client.Client{}
 	config, err := config.Get()
 	if err != nil {
 		return nil, err
@@ -43,16 +42,8 @@ func (j ExecutionService) CreateSubmission(input stella.SubmissionInput) (*stell
 
 	ctx := context.Background()
 
-	reader, err := j.DockerClient.ImagePull(ctx, "docker.io/library/"+langauge.Image, types.ImagePullOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	defer reader.Close()
-	io.Copy(os.Stdout, reader)
-
 	resp, err := j.DockerClient.ContainerCreate(ctx, &container.Config{
-		Image:           langauge.Image,
+		Image:           "stella-compilers",
 		Cmd:             strings.Split(langauge.Cmd, " "),
 		Tty:             false,
 		AttachStdout:    true,
@@ -116,7 +107,6 @@ func (j ExecutionService) CreateSubmission(input stella.SubmissionInput) (*stell
 		Stderr:   stderror.String(),
 		Executed: true,
 		ExitCode: data.State.ExitCode,
-		Memory:   float32(data.Node.Memory),
 		Time:     float32(endedAt.Sub(startedAt).Seconds()),
 	}
 
