@@ -1,12 +1,11 @@
 package routes
 
 import (
-	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	"github.com/khai93/stella"
 	"github.com/khai93/stella/config"
 	"github.com/khai93/stella/handlers"
 	"github.com/khai93/stella/middlewares"
-	"github.com/khai93/stella/pkg/docker"
 )
 
 type routes struct {
@@ -14,19 +13,9 @@ type routes struct {
 }
 
 // initializes routes with their handlers and rreturns the routes
-func InitRoutes(config config.Configuration) routes {
+func InitRoutes(config config.Configuration, execService stella.ExecutionService, subService stella.SubmissionService) routes {
 	r := routes{
 		router: gin.Default(),
-	}
-
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		panic(err)
-	}
-
-	// Services
-	execService := docker.ExecutionService{
-		DockerClient: cli,
 	}
 
 	v1 := r.router.Group("/v1")
@@ -36,12 +25,12 @@ func InitRoutes(config config.Configuration) routes {
 		}
 
 		sh := handlers.SubmissionHandler{
-			ExecService: execService,
+			SubmissionService: subService,
 		}
 
 		v1.GET("/languages", middlewares.ErrorHandler(), lh.GetLanguages)
-		v1.POST("/submissions", middlewares.ErrorHandler(), sh.CreateSubmission)
-		//v1.GET("/submissions/:token", middlewares.ErrorHandler(), sh.GetSubmission)
+		v1.POST("/submissions/create", middlewares.ErrorHandler(), sh.CreateSubmission)
+		v1.GET("/submissions/:token", middlewares.ErrorHandler(), sh.GetSubmission)
 		//v1.POST("/test-submissions", middlewares.ErrorHandler(), sh.CreateTestSubmission)
 	}
 
