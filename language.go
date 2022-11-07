@@ -26,4 +26,12 @@ var Langauges = []Language{
 		Cmd:           "node main.js",
 		EntryFileName: "main.js",
 	},
+	{
+		Id:            3,
+		Name:          "Python",
+		Version:       "latest",
+		Image:         "python",
+		Cmd:           "python main.py",
+		EntryFileName: "main.py",
+	},
 }
