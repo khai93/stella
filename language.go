@@ -4,8 +4,8 @@ type Language struct {
 	Id            int
 	Name          string
 	Version       string
-	Image         string // Docker Image
-	Cmd           string // Command to run the language's program for submission
+	Image         string   // Docker Image
+	Cmd           []string // Command to run the language's program for submission
 	EntryFileName string
 }
 
@@ -15,7 +15,7 @@ var Langauges = []Language{
 		Name:          "Go",
 		Version:       "latest",
 		Image:         "golang",
-		Cmd:           "go run /main.go",
+		Cmd:           []string{"go", "run", "/main.go"},
 		EntryFileName: "main.go",
 	},
 	{
@@ -23,7 +23,7 @@ var Langauges = []Language{
 		Name:          "NodeJS",
 		Version:       "latest",
 		Image:         "node",
-		Cmd:           "node main.js",
+		Cmd:           []string{"node", "main.js"},
 		EntryFileName: "main.js",
 	},
 	{
@@ -31,7 +31,15 @@ var Langauges = []Language{
 		Name:          "Python",
 		Version:       "latest",
 		Image:         "python",
-		Cmd:           "python main.py",
+		Cmd:           []string{"python", "main.py"},
 		EntryFileName: "main.py",
+	},
+	{
+		Id:            4,
+		Name:          "C++",
+		Version:       "latest",
+		Image:         "cpp",
+		Cmd:           []string{"sh", "-c", "g++ -o main main.cpp && ./main"},
+		EntryFileName: "main.cpp",
 	},
 }

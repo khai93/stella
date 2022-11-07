@@ -51,7 +51,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	containerTimeout := 0
 	resp, err := j.DockerClient.ContainerCreate(ctx, &container.Config{
 		Image:           "stella-compilers",
-		Cmd:             strings.Split(langauge.Cmd, " "),
+		Cmd:             langauge.Cmd,
 		Tty:             false,
 		OpenStdin:       true,
 		AttachStdin:     true,
