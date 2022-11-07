@@ -54,6 +54,8 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 		Image:           "stella-compilers",
 		Cmd:             strings.Split(langauge.Cmd, " "),
 		Tty:             false,
+		OpenStdin:       true,
+		AttachStdin:     true,
 		AttachStdout:    true,
 		NetworkDisabled: true,
 		StopTimeout:     &containerTimeout,
@@ -70,37 +72,51 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	defer j.DockerClient.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 
 	if err := j.DockerClient.CopyToContainer(ctx, resp.ID, "/", file, types.CopyToContainerOptions{AllowOverwriteDirWithFile: true}); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err := j.DockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+		return nil, err
 	}
 
+	waiter, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+		Stdin:  true,
+		Stream: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Write StdIn
+	_, writeErr := waiter.Conn.Write([]byte(input.StdIn))
+	if writeErr != nil {
+		return nil, writeErr
+	}
 	statusCh, errCh := j.DockerClient.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
 			return nil, err
 		}
-	case <-statusCh:
 	case <-time.After(time.Duration(config.Timeout * int(time.Second))):
-		print("load")
 		exitErr := j.DockerClient.ContainerStop(ctx, resp.ID, nil)
 		if exitErr != nil {
 			return nil, exitErr
 		}
-		var exitOutput stella.SubmissionOutput = stella.SubmissionOutput{
+		exitOutput := stella.SubmissionOutput{
 			Executed: true,
 			ExitCode: 124,
+			Token:    input.Token,
 			Time:     float32(config.Timeout),
 		}
+
 		return &exitOutput, nil
+	case <-statusCh:
 	}
 
 	reader, err2 := j.DockerClient.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Timestamps: false, Follow: true})
 	if err2 != nil {
-		panic(err)
+		return nil, err
 	}
 	defer reader.Close()
 
@@ -108,17 +124,17 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	stderror := &bytes.Buffer{}
 	data, err := j.DockerClient.ContainerInspect(ctx, resp.ID)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	startedAt, err := time.Parse(time.RFC3339Nano, data.State.StartedAt)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	endedAt, err := time.Parse(time.RFC3339Nano, data.State.FinishedAt)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stdcopy.StdCopy(stdoutput, stderror, reader)
@@ -133,10 +149,6 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	}
 
 	return &output, nil
-}
-
-func (j ExecutionService) CreateTestSubmission(input stella.TestSubmissionInput, base64_encoded bool, wait bool) (*stella.SubmissionOutput, error) {
-	return nil, errors.New("Not Implemented")
 }
 
 func (j ExecutionService) GetSubmission(token string, base64_encoded bool, fields []string) (*stella.SubmissionOutput, error) {

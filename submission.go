@@ -7,6 +7,7 @@ type SubmissionInput struct {
 	SourceCode      string `json:"source_code,omitempty"`
 	LanguageId      int    `json:"language_id,omitempty"`
 	AdditionalFiles string `json:"additional_files,omitempty"`
+	StdIn           string `json:"std_in,omitempty"`
 }
 
 type TestSubmissionInput struct {
