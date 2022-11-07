@@ -13,11 +13,7 @@ type LanguageHandler struct {
 Gets the languages from the Execution Service and sends it as response
 */
 func (h LanguageHandler) GetLanguages(c *gin.Context) {
-	languages, err := h.ExecService.GetLanguages()
-	if err != nil {
-		c.Error(err)
-		return
-	}
+	languages := "todo"
 
 	c.JSON(200, languages)
 }
