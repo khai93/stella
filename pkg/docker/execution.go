@@ -34,6 +34,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 		return nil, err
 	}
 
+	// Create File
 	languageIndex := slices.IndexFunc(stella.Langauges, func(l stella.Language) bool { return l.Id == input.LanguageId })
 	if languageIndex == -1 {
 		return nil, errors.New("Language Id '" + fmt.Sprint(input.LanguageId) + "' does not exist.")
@@ -47,9 +48,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 
 	ctx := context.Background()
 
-	// inst
 	containerTimeout := 0
-
 	resp, err := j.DockerClient.ContainerCreate(ctx, &container.Config{
 		Image:           "stella-compilers",
 		Cmd:             strings.Split(langauge.Cmd, " "),
@@ -148,13 +147,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 		Time:     float32(endedAt.Sub(startedAt).Seconds()),
 	}
 
+	output.OutputMatched = strings.TrimSuffix(strings.Trim(output.Stdout, " "), "\n") == input.ExpectedOutput
+
 	return &output, nil
-}
-
-func (j ExecutionService) GetSubmission(token string, base64_encoded bool, fields []string) (*stella.SubmissionOutput, error) {
-	return nil, errors.New("Not Implemented")
-}
-
-func (j ExecutionService) GetLanguages() ([]stella.SubmissionLanguage, error) {
-	return nil, errors.New("Not Implemented")
 }
