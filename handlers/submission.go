@@ -9,7 +9,11 @@ type SubmissionHandler struct {
 	SubmissionService stella.SubmissionService
 }
 
-// Creates a Submission to SubmissionService and returns the response
+// @Description Creates a Submission to SubmissionService and returns the response
+// @Param request body stella.SubmissionInput true "Submission Input"
+// @Success 201 {object} stella.SubmissionOutput
+// @Failure 500 {object} httputil.HttpError
+// @Router /submissions/create [post]
 func (h SubmissionHandler) CreateSubmission(c *gin.Context) {
 	var body stella.SubmissionInput
 	bodyErr := c.Bind(&body)
@@ -27,7 +31,11 @@ func (h SubmissionHandler) CreateSubmission(c *gin.Context) {
 	c.JSON(201, output)
 }
 
-// Get a submission from the SubsmissionService and return the response
+// @Description Get a submission from the SubsmissionService and return the response
+// @Param token path string true "Submission Token"
+// @Success 200 {object} stella.SubmissionOutput
+// @Failure 500 {object} httputil.HttpError
+// @Router /submissions/{token} [get]
 func (h SubmissionHandler) GetSubmission(c *gin.Context) {
 	token := c.Param("token")
 

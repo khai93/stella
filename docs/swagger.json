@@ -1,0 +1,176 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Code execution API",
+        "title": "Stella API",
+        "termsOfService": "https://github.com/khai93/stella/blob/main/LICENSE",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:4000",
+    "basePath": "/v1",
+    "paths": {
+        "/languages": {
+            "get": {
+                "description": "Gets the languages from the Execution Service and sends it as response",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LanguageView"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/create": {
+            "post": {
+                "description": "Creates a Submission to SubmissionService and returns the response",
+                "parameters": [
+                    {
+                        "description": "Submission Input",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/stella.SubmissionInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/stella.SubmissionOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/{token}": {
+            "get": {
+                "description": "Get a submission from the SubsmissionService and return the response",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Submission Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/stella.SubmissionOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HttpError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.LanguageView": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "httputil.HttpError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "stella.SubmissionInput": {
+            "type": "object",
+            "properties": {
+                "additional_files": {
+                    "type": "string"
+                },
+                "expected_output": {
+                    "type": "string"
+                },
+                "language_id": {
+                    "type": "integer"
+                },
+                "source_code": {
+                    "type": "string"
+                },
+                "std_in": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "stella.SubmissionOutput": {
+            "type": "object",
+            "properties": {
+                "executed": {
+                    "type": "boolean"
+                },
+                "exit_code": {
+                    "type": "integer"
+                },
+                "memory": {
+                    "type": "number"
+                },
+                "output_matched": {
+                    "type": "boolean"
+                },
+                "stderr": {
+                    "type": "string"
+                },
+                "stdout": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

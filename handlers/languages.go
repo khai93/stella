@@ -15,9 +15,10 @@ type LanguageView struct {
 	Version string `json:"version"`
 }
 
-/*
-Gets the languages from the Execution Service and sends it as response
-*/
+// @Description Gets the languages from the Execution Service and sends it as response
+// @Success 200 {object} handlers.LanguageView
+// @Failure 500 {object} httputil.HttpError
+// @Router /languages [get]
 func (h LanguageHandler) GetLanguages(c *gin.Context) {
 	var output = []LanguageView{}
 

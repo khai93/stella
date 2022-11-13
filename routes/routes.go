@@ -4,8 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/khai93/stella"
 	"github.com/khai93/stella/config"
+	_ "github.com/khai93/stella/docs"
 	"github.com/khai93/stella/handlers"
 	"github.com/khai93/stella/middlewares"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type routes struct {
@@ -17,6 +20,8 @@ func InitRoutes(config config.Configuration, execService stella.ExecutionService
 	r := routes{
 		router: gin.Default(),
 	}
+
+	r.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.router.Group("/v1")
 	{

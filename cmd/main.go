@@ -16,6 +16,17 @@ import (
 	"github.com/khai93/stella/routes"
 )
 
+// @title Stella API
+// @version 1.0
+// @Description Code execution API
+// @termsOfService https://github.com/khai93/stella/blob/main/LICENSE
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:4000
+// @BasePath /v1
+
 func main() {
 	c, err := config.Get()
 	if err != nil {
@@ -76,5 +87,6 @@ func main() {
 	}()
 
 	r := routes.InitRoutes(*c, execService, subService)
+
 	r.Run(":" + strconv.Itoa(c.Port))
 }
