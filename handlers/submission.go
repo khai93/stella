@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/khai93/stella"
 )
@@ -22,6 +25,11 @@ func (h SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
+	if body.LanguageId == 0 || body.LanguageId > len(stella.Langauges) {
+		c.Error(errors.New("Language id '" + fmt.Sprint(body.LanguageId) + "' does not exist"))
+		return
+	}
+
 	output, err := h.SubmissionService.CreateSubmission(body)
 	if err != nil {
 		c.Error(err)
@@ -40,6 +48,10 @@ func (h SubmissionHandler) GetSubmission(c *gin.Context) {
 	token := c.Param("token")
 
 	output, err := h.SubmissionService.GetSubmission(token)
+	if output == nil {
+		c.Status(404)
+		return
+	}
 	if err != nil {
 		c.Error(err)
 		return
