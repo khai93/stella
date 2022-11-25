@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/alitto/pond"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/go-redis/redis/v9"
 	"github.com/khai93/stella"
@@ -38,6 +39,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	ctx := context.Background()
+	reader, err := cli.ImagePull(ctx, "khai52/stella-compilers:latest", types.ImagePullOptions{})
+	if err != nil {
+		panic(err)
+	}
+	defer reader.Close()
 
 	// Redis
 	rdb := redis.NewClient(&redis.Options{
