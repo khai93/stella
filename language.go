@@ -6,17 +6,23 @@ type Language struct {
 	Version       string
 	Image         string   // Docker Image
 	Cmd           []string // Command to run the language's program for submission
+	TestCmd       []string
 	EntryFileName string
+	TestFileName  string
+	TestFramework TestFramework
 }
 
-var Langauges = []Language{
+var Languages = []Language{
 	{
 		Id:            1,
 		Name:          "Go",
 		Version:       "latest",
 		Image:         "golang",
 		Cmd:           []string{"go", "run", "/main.go"},
+		TestCmd:       []string{"sh", "-c", "go mod init main;go test -json *.go"},
 		EntryFileName: "main.go",
+		TestFileName:  "main_test.go",
+		TestFramework: GoTestFramework,
 	},
 	{
 		Id:            2,
@@ -24,7 +30,10 @@ var Langauges = []Language{
 		Version:       "latest",
 		Image:         "node",
 		Cmd:           []string{"node", "main.js"},
+		TestCmd:       []string{"jest", "main.test.js", "-c", "{}", "--json"},
 		EntryFileName: "main.js",
+		TestFileName:  "main.test.js",
+		TestFramework: JestTestFramework,
 	},
 	{
 		Id:            3,

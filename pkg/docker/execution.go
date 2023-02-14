@@ -3,6 +3,7 @@ package docker
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -20,9 +21,12 @@ import (
 
 type ExecutionService struct {
 	DockerClient *client.Client
+	TestService  stella.TestService
 }
 
 func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stella.SubmissionOutput, error) {
+	isTestSubmission := input.TestSourceCode != ""
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
@@ -35,23 +39,28 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	}
 
 	// Create File
-	languageIndex := slices.IndexFunc(stella.Langauges, func(l stella.Language) bool { return l.Id == input.LanguageId })
+	languageIndex := slices.IndexFunc(stella.Languages, func(l stella.Language) bool { return l.Id == input.LanguageId })
 	if languageIndex == -1 {
 		return nil, errors.New("Language Id '" + fmt.Sprint(input.LanguageId) + "' does not exist.")
 	}
-	langauge := stella.Langauges[languageIndex]
+	language := stella.Languages[languageIndex]
 
-	file, err := filelib.CreateFileBuffer(input.SourceCode, langauge.EntryFileName)
+	file, err := filelib.CreateFileBuffer(input.SourceCode, language.EntryFileName)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
 
+	Cmd := language.Cmd
+	if isTestSubmission {
+		Cmd = language.TestCmd
+	}
+
 	containerTimeout := 0
 	resp, err := j.DockerClient.ContainerCreate(ctx, &container.Config{
 		Image:           "khai52/stella-compilers",
-		Cmd:             langauge.Cmd,
+		Cmd:             Cmd,
 		Tty:             false,
 		OpenStdin:       true,
 		AttachStdin:     true,
@@ -74,6 +83,20 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 		return nil, err
 	}
 
+	timeout := time.Duration(config.Timeout * int(time.Second))
+	// Copy Test source code if it is provided
+	if isTestSubmission {
+		testFile, err := filelib.CreateFileBuffer(input.TestSourceCode, language.TestFileName)
+		if err != nil {
+			return nil, err
+		}
+		if err := j.DockerClient.CopyToContainer(ctx, resp.ID, "/", testFile, types.CopyToContainerOptions{AllowOverwriteDirWithFile: true}); err != nil {
+			return nil, err
+		}
+
+		timeout = time.Duration(10 * time.Second)
+	}
+
 	if err := j.DockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
@@ -91,13 +114,14 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 	if writeErr != nil {
 		return nil, writeErr
 	}
+
 	statusCh, errCh := j.DockerClient.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
 			return nil, err
 		}
-	case <-time.After(time.Duration(config.Timeout * int(time.Second))):
+	case <-time.After(timeout):
 		exitErr := j.DockerClient.ContainerStop(ctx, resp.ID, nil)
 		if exitErr != nil {
 			return nil, exitErr
@@ -138,9 +162,26 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 
 	stdcopy.StdCopy(stdoutput, stderror, reader)
 
+	stdout := stdoutput.String()
+	stderr := stderror.String()
+
+	if isTestSubmission {
+		parsed, err := j.TestService.ParseTestOutput(stdoutput.String(), language.TestFramework)
+		if err != nil {
+			return nil, err
+		}
+
+		b, err := json.Marshal(parsed)
+		if err != nil {
+			return nil, err
+		}
+		stdout = string(b)
+		stderr = ""
+	}
+
 	var output stella.SubmissionOutput = stella.SubmissionOutput{
-		Stdout:   stdoutput.String(),
-		Stderr:   stderror.String(),
+		Stdout:   stdout,
+		Stderr:   stderr,
 		Executed: true,
 		ExitCode: data.State.ExitCode,
 		Token:    input.Token,

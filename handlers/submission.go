@@ -25,7 +25,7 @@ func (h SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	if body.LanguageId == 0 || body.LanguageId > len(stella.Langauges) {
+	if body.LanguageId == 0 || body.LanguageId > len(stella.Languages) {
 		c.Error(errors.New("Language id '" + fmt.Sprint(body.LanguageId) + "' does not exist"))
 		return
 	}

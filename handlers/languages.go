@@ -22,7 +22,7 @@ type LanguageView struct {
 func (h LanguageHandler) GetLanguages(c *gin.Context) {
 	var output = []LanguageView{}
 
-	for _, l := range stella.Langauges {
+	for _, l := range stella.Languages {
 		var base = LanguageView{
 			Id:      l.Id,
 			Name:    l.Name,

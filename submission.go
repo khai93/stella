@@ -8,6 +8,7 @@ type SubmissionInput struct {
 	LanguageId      int    `json:"language_id,omitempty"`
 	AdditionalFiles string `json:"additional_files,omitempty"`
 	ExpectedOutput  string `json:"expected_output,omitempty"`
+	TestSourceCode  string `json:"test_source_code,omitempty"`
 	StdIn           string `json:"std_in,omitempty"`
 }
 
@@ -28,6 +29,14 @@ type SubmissionOutput struct {
 	Executed      bool    `json:"executed"`
 	OutputMatched bool    `json:"output_matched"`
 	Time          float32 `json:"time,string,omitempty"`
+}
+
+type TestSubmissionOutput struct {
+	Token   string `json:"token"`
+	Passed  []Test `json:"passed"`
+	Failed  []Test `json:"failed"`
+	Success bool   `json:"success"`
+	Total   int    `json:"total"`
 }
 
 func (s SubmissionOutput) MarshalBinary() ([]byte, error) {

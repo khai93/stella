@@ -14,6 +14,7 @@ import (
 	"github.com/khai93/stella/config"
 	"github.com/khai93/stella/pkg/docker"
 	stella_redis "github.com/khai93/stella/pkg/redis"
+	"github.com/khai93/stella/pkg/test"
 	"github.com/khai93/stella/routes"
 )
 
@@ -53,9 +54,12 @@ func main() {
 		DB:       c.Redis.DB,
 	})
 
+	testService := test.TestService{}
+
 	// Services
 	execService := docker.ExecutionService{
 		DockerClient: cli,
+		TestService:  testService,
 	}
 
 	subService := stella_redis.SubmissionService{
@@ -75,8 +79,6 @@ func main() {
 				panic(err)
 			}
 
-			fmt.Println(msg)
-
 			pond.Submit(func() {
 				job := stella.SubmissionInput{}
 				json.Unmarshal([]byte(msg.Payload), &job)
@@ -89,6 +91,7 @@ func main() {
 				if setErr != nil {
 					panic(setErr)
 				}
+				fmt.Printf("Submission '%s' finished", job.Token)
 			})
 		}
 	}()

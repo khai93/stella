@@ -7,6 +7,7 @@ RUN apk add --no-cache go
 
 # node
 RUN apk add --update nodejs npm
+RUN npm install -g jest
 
 # python
 ENV PYTHONUNBUFFERED=1
