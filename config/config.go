@@ -28,9 +28,9 @@ func Get() (*Configuration, error) {
 	}
 
 	var (
-		memoryLimits = envlib.Getenv("STELLA_MEMORY_LIMITS", "104857600")
+		memoryLimits = envlib.Getenv("STELLA_MEMORY_LIMITS", "1009288000")
 		timeout      = envlib.Getenv("STELLA_TIMEOUT", "5")
-		workers      = envlib.Getenv("STELLA_WORKERS", "100")
+		workers      = envlib.Getenv("STELLA_WORKERS", "4")
 		port         = envlib.Getenv("STELLA_PORT", "4000")
 		redisAddr    = envlib.Getenv("REDIS_ADDRESS", "redis:6379")
 		redisPass    = envlib.Getenv("REDIS_PASSWORD", "")

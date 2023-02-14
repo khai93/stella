@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/khai93/stella"
 )
@@ -10,8 +11,8 @@ import (
 type TestService struct{}
 
 func (t TestService) ParseTestOutput(stdout string, framework stella.TestFramework) (*stella.TestParseOutput, error) {
-	var passedTests []stella.Test
-	var failedTests []stella.Test
+	passedTests := []stella.Test{}
+	failedTests := []stella.Test{}
 
 	switch framework {
 	case stella.JestTestFramework:
@@ -27,7 +28,7 @@ func (t TestService) ParseTestOutput(stdout string, framework stella.TestFramewo
 						RawOutput:   a.FullName,
 						Duration:    a.Duration,
 					})
-				} else {
+				} else if a.Status == "failed" {
 					failedTests = append(passedTests, stella.Test{
 						Description: a.Title,
 						Passed:      false,
@@ -35,6 +36,28 @@ func (t TestService) ParseTestOutput(stdout string, framework stella.TestFramewo
 						Duration:    a.Duration,
 					})
 				}
+			}
+		}
+	case stella.GoTestFramework:
+		lines := strings.Split(stdout, "\n")
+
+		for i := 0; i < len(lines); i++ {
+			var parsed GoTestOutput
+			json.Unmarshal([]byte(lines[i]), &parsed)
+			if parsed.Action == "pass" {
+				passedTests = append(passedTests, stella.Test{
+					Description: parsed.Test,
+					Passed:      true,
+					RawOutput:   parsed.Package,
+					Duration:    int(parsed.Elapsed * 1000),
+				})
+			} else if parsed.Action == "fail" {
+				passedTests = append(passedTests, stella.Test{
+					Description: parsed.Test,
+					Passed:      true,
+					RawOutput:   parsed.Package,
+					Duration:    int(parsed.Elapsed * 1000),
+				})
 			}
 		}
 	default:

@@ -57,7 +57,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 		Cmd = language.TestCmd
 	}
 
-	containerTimeout := 0
+	containerTimeout := config.Timeout
 	resp, err := j.DockerClient.ContainerCreate(ctx, &container.Config{
 		Image:           "khai52/stella-compilers",
 		Cmd:             Cmd,
@@ -130,7 +130,7 @@ func (j ExecutionService) ExecuteSubmission(input stella.SubmissionInput) (*stel
 			Executed: true,
 			ExitCode: 124,
 			Token:    input.Token,
-			Time:     float32(config.Timeout),
+			Time:     float32(timeout),
 		}
 
 		return &exitOutput, nil
